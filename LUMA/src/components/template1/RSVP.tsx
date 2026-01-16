@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Send, ChevronRight, ChevronLeft, Music, Check, MessageSquare } from 'lucide-react';
 
 import { logger } from '@/services/logger';
+import { addRSVP } from '@/services/mockStorage';
 
 interface FormData {
     name: string;
@@ -41,6 +42,25 @@ const RSVP = () => {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         logger.formSubmission('RSVP', formData);
+
+        // Save to localStorage via mockStorage
+        addRSVP({
+            name: formData.name,
+            phone: formData.phone,
+            guests: parseInt(formData.guests),
+            guestNames: formData.guestNames,
+            children: formData.children,
+            childrenAges: formData.childrenAges,
+            isAttending: formData.isAttending === 'sim',
+            songRequest: formData.songRequest,
+            message: formData.message,
+        });
+
+        // Dispatch event for cross-tab updates
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('luma-storage-update', { detail: { type: 'guests' } }));
+        }
+
         setSubmitted(true);
     };
 

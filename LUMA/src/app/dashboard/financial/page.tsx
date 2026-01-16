@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
     Wallet,
@@ -10,26 +10,40 @@ import {
     Check,
     DollarSign,
     Clock,
-    TrendingUp
+    TrendingUp,
+    RefreshCw
 } from "lucide-react";
 import { showToast } from "@/components/ui/Toast";
-
-// Mock transaction data
-const MOCK_TRANSACTIONS = [
-    { id: 1, sender: "Maria Silva", gift: "Jantar Romântico", amount: 200, date: "hoje, 14:32" },
-    { id: 2, sender: "João Santos", gift: "Lua de Mel", amount: 500, date: "ontem, 10:15" },
-    { id: 3, sender: "Carlos Lima", gift: "Eletrodomésticos", amount: 300, date: "15 Jun, 18:45" },
-    { id: 4, sender: "Fernanda Costa", gift: "Decoração", amount: 150, date: "14 Jun, 09:20" },
-    { id: 5, sender: "Patricia Santos", gift: "Mobília", amount: 400, date: "13 Jun, 16:00" },
-];
-
-const TOTAL_BALANCE = MOCK_TRANSACTIONS.reduce((sum, t) => sum + t.amount, 0);
+import { getFinancialSummary, getTransactions, getSiteData, saveSiteData } from "@/services/mockStorage";
+import { GiftTransaction } from "@/types/template";
 
 export default function FinancialPage() {
-    const [pixKey, setPixKey] = useState("ana.pedro@email.com");
-    const [pixHolder, setPixHolder] = useState("Ana Maria da Silva");
+    const [transactions, setTransactions] = useState<GiftTransaction[]>([]);
+    const [summary, setSummary] = useState({ totalBalance: 0, transactionCount: 0, averageGift: 0, recentTransactions: [] as GiftTransaction[] });
+    const [pixKey, setPixKey] = useState("");
+    const [pixHolder, setPixHolder] = useState("");
     const [copied, setCopied] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+
+    const loadData = () => {
+        const txList = getTransactions();
+        const fin = getFinancialSummary();
+        const site = getSiteData();
+
+        setTransactions(txList);
+        setSummary(fin);
+        setPixKey(site.gifts?.pixKey || "");
+        setPixHolder(site.gifts?.pixHolder || "");
+    };
+
+    useEffect(() => {
+        loadData();
+
+        const handleStorageUpdate = () => loadData();
+        window.addEventListener("luma-storage-update", handleStorageUpdate);
+
+        return () => window.removeEventListener("luma-storage-update", handleStorageUpdate);
+    }, []);
 
     const handleCopyPix = () => {
         navigator.clipboard.writeText(pixKey);
@@ -39,21 +53,54 @@ export default function FinancialPage() {
 
     const handleSavePixConfig = async () => {
         setIsSaving(true);
-        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        const siteData = getSiteData();
+        saveSiteData({
+            ...siteData,
+            gifts: {
+                ...siteData.gifts,
+                pixKey,
+                pixHolder,
+            }
+        });
+
+        await new Promise(resolve => setTimeout(resolve, 500));
         setIsSaving(false);
         showToast("Configurações de PIX salvas!", "success");
+    };
+
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+        if (diffHours < 1) return "agora";
+        if (diffHours < 24) return `há ${diffHours}h`;
+        if (diffHours < 48) return "ontem";
+        return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
     };
 
     return (
         <div className="space-y-8">
             {/* Header */}
-            <header>
-                <h1 className="text-2xl md:text-3xl font-medium text-[#2A3B2E] font-[family-name:var(--font-heading)]">
-                    Financeiro & Presentes
-                </h1>
-                <p className="text-[#6B7A6C] mt-1">
-                    Gerencie os presentes recebidos e configure seu PIX.
-                </p>
+            <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl md:text-3xl font-medium text-[#2A3B2E] font-[family-name:var(--font-heading)]">
+                        Financeiro & Presentes
+                    </h1>
+                    <p className="text-[#6B7A6C] mt-1">
+                        Gerencie os presentes recebidos e configure seu PIX.
+                    </p>
+                </div>
+                <button
+                    onClick={loadData}
+                    className="flex items-center gap-2 px-3 py-2.5 border border-[#DCD3C5] text-[#6B7A6C] text-sm rounded-lg hover:bg-[#E5E0D6] transition-colors"
+                    title="Atualizar dados"
+                >
+                    <RefreshCw size={16} />
+                    Atualizar
+                </button>
             </header>
 
             {/* Balance Card */}
@@ -73,15 +120,19 @@ export default function FinancialPage() {
                         </div>
                         <div>
                             <p className="text-white/60 text-sm">Saldo Disponível</p>
-                            <div className="flex items-center gap-2">
-                                <TrendingUp size={14} className="text-emerald-400" />
-                                <span className="text-emerald-400 text-xs">+R$ 500 esta semana</span>
-                            </div>
+                            {summary.transactionCount > 0 && (
+                                <div className="flex items-center gap-2">
+                                    <TrendingUp size={14} className="text-emerald-400" />
+                                    <span className="text-emerald-400 text-xs">
+                                        {summary.transactionCount} presente{summary.transactionCount > 1 ? 's' : ''} recebido{summary.transactionCount > 1 ? 's' : ''}
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     </div>
 
                     <p className="text-5xl font-medium font-[family-name:var(--font-heading)] mb-8">
-                        R$ {TOTAL_BALANCE.toLocaleString('pt-BR')}
+                        R$ {summary.totalBalance.toLocaleString('pt-BR')}
                     </p>
 
                     <button className="flex items-center gap-2 px-6 py-3 bg-[#C19B58] text-white rounded-lg font-medium hover:bg-[#b08d4b] transition-colors">
@@ -104,7 +155,7 @@ export default function FinancialPage() {
                             <Gift size={20} className="text-[#C19B58]" />
                         </div>
                         <div>
-                            <p className="text-2xl font-medium text-[#2A3B2E]">{MOCK_TRANSACTIONS.length}</p>
+                            <p className="text-2xl font-medium text-[#2A3B2E]">{summary.transactionCount}</p>
                             <p className="text-xs text-[#6B7A6C]">Presentes recebidos</p>
                         </div>
                     </div>
@@ -122,7 +173,7 @@ export default function FinancialPage() {
                         </div>
                         <div>
                             <p className="text-2xl font-medium text-[#2A3B2E]">
-                                R$ {Math.round(TOTAL_BALANCE / MOCK_TRANSACTIONS.length)}
+                                R$ {summary.averageGift}
                             </p>
                             <p className="text-xs text-[#6B7A6C]">Média por presente</p>
                         </div>
@@ -171,11 +222,12 @@ export default function FinancialPage() {
                                     value={pixKey}
                                     onChange={(e) => setPixKey(e.target.value)}
                                     className="w-full px-4 py-3 pr-12 border border-[#DCD3C5] rounded-lg text-sm focus:border-[#C19B58] focus:outline-none bg-white text-[#2A3B2E]"
-                                    placeholder="email@exemplo.com"
+                                    placeholder="email@exemplo.com ou CPF"
                                 />
                                 <button
                                     onClick={handleCopyPix}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-md hover:bg-[#E5E0D6] text-[#6B7A6C] transition-colors"
+                                    disabled={!pixKey}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-md hover:bg-[#E5E0D6] text-[#6B7A6C] transition-colors disabled:opacity-50"
                                     title="Copiar"
                                 >
                                     {copied ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} />}
@@ -225,9 +277,15 @@ export default function FinancialPage() {
                     </h2>
 
                     <div className="space-y-4">
-                        {MOCK_TRANSACTIONS.map((transaction) => (
+                        {transactions.length === 0 && (
+                            <p className="text-sm text-[#6B7A6C] text-center py-8">
+                                Nenhum presente recebido ainda.
+                            </p>
+                        )}
+
+                        {transactions.slice(-5).reverse().map((tx) => (
                             <div
-                                key={transaction.id}
+                                key={tx.id}
                                 className="flex items-center justify-between pb-4 border-b border-[#DCD3C5]/50 last:border-0 last:pb-0"
                             >
                                 <div className="flex items-center gap-3">
@@ -235,15 +293,15 @@ export default function FinancialPage() {
                                         <Gift size={18} />
                                     </div>
                                     <div>
-                                        <p className="text-sm font-medium text-[#2A3B2E]">{transaction.sender}</p>
-                                        <p className="text-xs text-[#6B7A6C]">{transaction.gift}</p>
+                                        <p className="text-sm font-medium text-[#2A3B2E]">{tx.senderName}</p>
+                                        <p className="text-xs text-[#6B7A6C]">{tx.giftName}</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
                                     <p className="text-sm font-medium text-emerald-600">
-                                        +R$ {transaction.amount}
+                                        +R$ {tx.amount}
                                     </p>
-                                    <p className="text-[10px] text-[#6B7A6C]">{transaction.date}</p>
+                                    <p className="text-[10px] text-[#6B7A6C]">{formatDate(tx.createdAt)}</p>
                                 </div>
                             </div>
                         ))}

@@ -3,13 +3,14 @@
 import { useState, useRef } from "react";
 import {
     Lock, Palette, Type, Gift, Sparkles, ChevronDown, ChevronUp,
-    MapPin, Heart, Home, Clock, Image as ImageIcon, Plus, Trash2, Eye, EyeOff
+    MapPin, Heart, Home, Clock, Image as ImageIcon, Plus, Trash2, Eye, EyeOff, DollarSign, Link as LinkIcon, Check
 } from "lucide-react";
 import UpgradeModal from "./UpgradeModal";
 import ImageCropModal from "./ImageCropModal";
 import { Switch } from "@/components/ui/Switch";
 import { showToast } from "@/components/ui/Toast";
-import { TemplateData, GalleryImage, generateImageId } from "@/types/template";
+import { TemplateData, GalleryImage, GiftItem, SiteTheme, themeColors, generateImageId, generateGiftId, generateSlug } from "@/types/template";
+import { saveSiteData } from "@/services/mockStorage";
 
 interface EditorSidebarProps {
     data: TemplateData;
@@ -17,13 +18,17 @@ interface EditorSidebarProps {
 }
 
 // Type for nested objects in TemplateData
-type NestedTemplateKeys = "couple" | "ceremony" | "reception" | "gallery";
+type NestedTemplateKeys = "couple" | "ceremony" | "reception" | "gallery" | "gifts";
 
 export default function EditorSidebar({ data, onChange }: EditorSidebarProps) {
     const [showUpgrade, setShowUpgrade] = useState(false);
     const [lockedFeature, setLockedFeature] = useState("");
     const [openSection, setOpenSection] = useState<string | null>("home");
     const [isSaving, setIsSaving] = useState(false);
+
+    // Gift form state
+    const [newGiftName, setNewGiftName] = useState("");
+    const [newGiftPrice, setNewGiftPrice] = useState("");
 
     // Image crop state
     const [cropModal, setCropModal] = useState<{
@@ -137,12 +142,44 @@ export default function EditorSidebar({ data, onChange }: EditorSidebarProps) {
         });
     };
 
+    // Gift management
+    const addGift = () => {
+        if (!newGiftName.trim() || !newGiftPrice) return;
+
+        const newGift: GiftItem = {
+            id: generateGiftId(),
+            name: newGiftName.trim(),
+            price: parseFloat(newGiftPrice),
+            imageUrl: "",
+            category: "Geral",
+        };
+
+        const currentItems = data.gifts?.items || [];
+        onChange("gifts", {
+            ...data.gifts,
+            items: [...currentItems, newGift]
+        });
+
+        setNewGiftName("");
+        setNewGiftPrice("");
+        showToast("Presente adicionado!", "success");
+    };
+
+    const removeGift = (id: string) => {
+        const currentItems = data.gifts?.items || [];
+        onChange("gifts", {
+            ...data.gifts,
+            items: currentItems.filter((gift) => gift.id !== id),
+        });
+    };
+
     // Save handler
     const handleSave = async () => {
         setIsSaving(true);
 
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        // Save to localStorage
+        saveSiteData(data);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
         setIsSaving(false);
         showToast("Site Salvo com Sucesso!", "success");
@@ -485,32 +522,173 @@ export default function EditorSidebar({ data, onChange }: EditorSidebarProps) {
                         )}
                     </div>
 
-                    {/* 5. DESIGN (LOCKED) */}
+                    {/* 5. DESIGN & APARÊNCIA */}
                     <div className="border-b border-[#DCD3C5]/50">
                         <button
-                            onClick={() => handleLockedClick("Design e Cores")}
-                            className="w-full flex items-center justify-between p-4 hover:bg-[#C19B58]/5 group transition-colors"
+                            onClick={() => toggleSection("design")}
+                            className={`w-full flex items-center justify-between p-4 hover:bg-[#E5E0D6]/50 transition-colors ${openSection === 'design' ? 'bg-[#E5E0D6]/50' : ''}`}
                         >
                             <div className="flex items-center gap-3">
-                                <Palette size={18} className="text-[#6B7A6C] group-hover:text-[#C19B58]" />
-                                <span className="font-medium text-[#2A3B2E]">Cores e Design</span>
+                                <Palette size={18} className="text-[#6B7A6C]" />
+                                <span className="font-medium text-[#2A3B2E]">Aparência</span>
                             </div>
-                            <Lock size={16} className="text-[#C19B58]/50 group-hover:text-[#C19B58]" />
+                            {openSection === 'design' ? <ChevronUp size={16} className="text-[#6B7A6C]" /> : <ChevronDown size={16} className="text-[#6B7A6C]" />}
                         </button>
+
+                        {openSection === 'design' && (
+                            <div className="p-4 space-y-4 bg-white/50 animate-in slide-in-from-top-2 duration-200">
+                                {/* Slug / URL */}
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-[#2A3B2E] uppercase tracking-wider flex items-center gap-1">
+                                        <LinkIcon size={12} />
+                                        Link do Site
+                                    </label>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs text-[#6B7A6C] whitespace-nowrap">luma.app/</span>
+                                        <input
+                                            type="text"
+                                            value={data.config?.slug || ""}
+                                            onChange={(e) => {
+                                                const slug = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                                                onChange("config", { ...data.config, slug } as TemplateData["config"]);
+                                            }}
+                                            placeholder="ana-e-pedro"
+                                            className="flex-1 px-3 py-2 text-sm border border-[#DCD3C5] rounded-lg focus:border-[#C19B58] focus:outline-none bg-white text-[#3E4A3F]"
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            const newSlug = generateSlug(data.brideName, data.groomName);
+                                            onChange("config", { ...data.config, slug: newSlug } as TemplateData["config"]);
+                                        }}
+                                        className="text-[10px] text-[#C19B58] hover:underline"
+                                    >
+                                        Gerar automaticamente
+                                    </button>
+                                </div>
+
+                                {/* Theme Selector */}
+                                <div className="space-y-3">
+                                    <label className="text-xs font-bold text-[#2A3B2E] uppercase tracking-wider">
+                                        Paleta de Cores
+                                    </label>
+                                    <div className="grid grid-cols-4 gap-2">
+                                        {(Object.keys(themeColors) as SiteTheme[]).map((theme) => {
+                                            const colors = themeColors[theme];
+                                            const isSelected = data.config?.theme === theme;
+                                            return (
+                                                <button
+                                                    key={theme}
+                                                    onClick={() => onChange("config", { ...data.config, theme } as TemplateData["config"])}
+                                                    className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all ${isSelected ? 'border-[#C19B58] bg-[#C19B58]/5' : 'border-[#DCD3C5] hover:border-[#6B7A6C]'}`}
+                                                >
+                                                    <div className="relative">
+                                                        <div
+                                                            className="w-8 h-8 rounded-full border-2 border-white shadow-md"
+                                                            style={{ backgroundColor: colors.primary }}
+                                                        />
+                                                        <div
+                                                            className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white shadow-sm"
+                                                            style={{ backgroundColor: colors.secondary }}
+                                                        />
+                                                        {isSelected && (
+                                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                                <Check size={14} className="text-white" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <span className="text-[10px] font-medium text-[#2A3B2E]">{colors.label}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* UPSELL: Fontes */}
+                                <div onClick={() => handleLockedClick("Tipografia")} className="relative opacity-70 hover:opacity-100 transition-opacity cursor-pointer group border border-dashed border-[#DCD3C5] rounded-lg p-3 bg-[#F7F5F0]">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-xs font-bold text-[#6B7A6C] flex items-center gap-2"><Type size={12} /> Fontes Personalizadas</span>
+                                        <Lock size={12} className="text-[#C19B58]" />
+                                    </div>
+                                    <div className="h-2 w-2/3 bg-[#E5E0D6] rounded mb-1"></div>
+                                    <div className="h-2 w-1/2 bg-[#E5E0D6] rounded"></div>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
-                    {/* 6. LISTA DE PRESENTES (LOCKED) */}
+                    {/* 6. LISTA DE PRESENTES */}
                     <div className="border-b border-[#DCD3C5]/50">
-                        <button
-                            onClick={() => handleLockedClick("Lista de Presentes")}
-                            className="w-full flex items-center justify-between p-4 hover:bg-[#C19B58]/5 group transition-colors"
-                        >
-                            <div className="flex items-center gap-3">
-                                <Gift size={18} className="text-[#6B7A6C] group-hover:text-[#C19B58]" />
-                                <span className="font-medium text-[#2A3B2E]">Lista de Presentes (PIX)</span>
+                        <SectionHeader
+                            id="gifts"
+                            icon={Gift}
+                            title="Lista de Presentes"
+                            isVisible={data.gifts?.isVisible ?? true}
+                            onToggleVisibility={() => toggleVisibility("gifts")}
+                        />
+
+                        {openSection === 'gifts' && (
+                            <div className="p-4 space-y-4 bg-white/50 animate-in slide-in-from-top-2 duration-200">
+                                {/* Add new gift */}
+                                <div className="space-y-3 pb-4 border-b border-[#DCD3C5]/50">
+                                    <p className="text-xs font-bold text-[#6B7A6C] uppercase">Adicionar Presente</p>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <div className="col-span-2">
+                                            <input
+                                                type="text"
+                                                value={newGiftName}
+                                                onChange={(e) => setNewGiftName(e.target.value)}
+                                                placeholder="Nome do presente"
+                                                className="w-full px-3 py-2 text-sm border border-[#DCD3C5] rounded-lg focus:border-[#C19B58] focus:outline-none bg-white text-[#3E4A3F]"
+                                            />
+                                        </div>
+                                        <div className="relative">
+                                            <DollarSign size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-[#6B7A6C]" />
+                                            <input
+                                                type="number"
+                                                value={newGiftPrice}
+                                                onChange={(e) => setNewGiftPrice(e.target.value)}
+                                                placeholder="Valor"
+                                                className="w-full pl-7 pr-3 py-2 text-sm border border-[#DCD3C5] rounded-lg focus:border-[#C19B58] focus:outline-none bg-white text-[#3E4A3F]"
+                                            />
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={addGift}
+                                        disabled={!newGiftName.trim() || !newGiftPrice}
+                                        className="w-full py-2 bg-[#C19B58] text-white rounded-lg text-sm font-medium hover:bg-[#b08d4b] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    >
+                                        <Plus size={16} />
+                                        Adicionar
+                                    </button>
+                                </div>
+
+                                {/* Gift list */}
+                                <div className="space-y-2">
+                                    <p className="text-xs font-bold text-[#6B7A6C] uppercase">Presentes Cadastrados ({data.gifts?.items?.length || 0})</p>
+                                    {data.gifts?.items?.length === 0 && (
+                                        <p className="text-sm text-[#6B7A6C] text-center py-4">Nenhum presente cadastrado ainda.</p>
+                                    )}
+                                    {data.gifts?.items?.map((gift) => (
+                                        <div
+                                            key={gift.id}
+                                            className="flex items-center justify-between p-3 bg-white rounded-lg border border-[#DCD3C5]"
+                                        >
+                                            <div>
+                                                <p className="text-sm font-medium text-[#2A3B2E]">{gift.name}</p>
+                                                <p className="text-xs text-[#C19B58] font-medium">R$ {gift.price.toFixed(2)}</p>
+                                            </div>
+                                            <button
+                                                onClick={() => removeGift(gift.id)}
+                                                className="p-2 rounded-lg hover:bg-red-50 text-[#6B7A6C] hover:text-red-500 transition-colors"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                            <Lock size={16} className="text-[#C19B58]/50 group-hover:text-[#C19B58]" />
-                        </button>
+                        )}
                     </div>
 
                 </div>

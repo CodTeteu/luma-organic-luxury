@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
     Search,
@@ -10,46 +10,53 @@ import {
     Clock,
     Baby,
     MessageSquare,
-    Filter
+    Filter,
+    RefreshCw
 } from "lucide-react";
-
-// Mock guest data
-const MOCK_GUESTS = [
-    { id: 1, name: "Maria Silva", status: "confirmed", adults: 2, children: 1, message: "Mal podemos esperar pela festa! Parabéns aos noivos!" },
-    { id: 2, name: "João Santos", status: "confirmed", adults: 1, children: 0, message: "Estarei presente com muito carinho!" },
-    { id: 3, name: "Ana Oliveira", status: "pending", adults: 2, children: 0, message: "" },
-    { id: 4, name: "Carlos Lima", status: "confirmed", adults: 2, children: 2, message: "Obrigado pelo convite, será uma honra!" },
-    { id: 5, name: "Fernanda Costa", status: "confirmed", adults: 1, children: 0, message: "Contando os dias!" },
-    { id: 6, name: "Roberto Almeida", status: "pending", adults: 2, children: 1, message: "" },
-    { id: 7, name: "Patricia Santos", status: "confirmed", adults: 2, children: 0, message: "Que dia especial será!" },
-    { id: 8, name: "Lucas Ferreira", status: "pending", adults: 1, children: 0, message: "" },
-    { id: 9, name: "Camila Rodrigues", status: "confirmed", adults: 2, children: 1, message: "Amamos vocês!" },
-    { id: 10, name: "Bruno Martins", status: "confirmed", adults: 1, children: 0, message: "" },
-];
+import { getGuestList, getGuestStats } from "@/services/mockStorage";
+import { RSVPGuest } from "@/types/template";
 
 export default function GuestsPage() {
+    const [guests, setGuests] = useState<RSVPGuest[]>([]);
+    const [stats, setStats] = useState({ total: 0, confirmed: 0, pending: 0, totalAdults: 0, totalChildren: 0 });
     const [searchTerm, setSearchTerm] = useState("");
     const [filterStatus, setFilterStatus] = useState<"all" | "confirmed" | "pending">("all");
 
-    const filteredGuests = MOCK_GUESTS.filter(guest => {
+    const loadData = () => {
+        const guestList = getGuestList();
+        const guestStats = getGuestStats();
+        setGuests(guestList);
+        setStats(guestStats);
+    };
+
+    useEffect(() => {
+        loadData();
+
+        // Listen for storage updates
+        const handleStorageUpdate = () => loadData();
+        window.addEventListener("luma-storage-update", handleStorageUpdate);
+
+        return () => window.removeEventListener("luma-storage-update", handleStorageUpdate);
+    }, []);
+
+    const filteredGuests = guests.filter(guest => {
         const matchesSearch = guest.name.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesFilter = filterStatus === "all" || guest.status === filterStatus;
+        const matchesFilter = filterStatus === "all" ||
+            (filterStatus === "confirmed" && guest.isAttending) ||
+            (filterStatus === "pending" && !guest.isAttending);
         return matchesSearch && matchesFilter;
     });
 
-    const totalConfirmed = MOCK_GUESTS.filter(g => g.status === "confirmed").length;
-    const totalPending = MOCK_GUESTS.filter(g => g.status === "pending").length;
-    const totalAdults = MOCK_GUESTS.filter(g => g.status === "confirmed").reduce((sum, g) => sum + g.adults, 0);
-    const totalChildren = MOCK_GUESTS.filter(g => g.status === "confirmed").reduce((sum, g) => sum + g.children, 0);
-
     const handleExportCSV = () => {
-        const headers = ["Nome", "Status", "Adultos", "Crianças", "Mensagem"];
-        const rows = MOCK_GUESTS.map(g => [
+        const headers = ["Nome", "Telefone", "Status", "Adultos", "Crianças", "Mensagem", "Data"];
+        const rows = guests.map(g => [
             g.name,
-            g.status === "confirmed" ? "Confirmado" : "Pendente",
-            g.adults.toString(),
-            g.children.toString(),
-            g.message
+            g.phone,
+            g.isAttending ? "Confirmado" : "Pendente",
+            g.guests.toString(),
+            g.children === "sim" ? "Sim" : "Não",
+            g.message,
+            new Date(g.createdAt).toLocaleDateString('pt-BR')
         ]);
 
         const csv = [headers, ...rows].map(row => row.join(",")).join("\n");
@@ -73,13 +80,23 @@ export default function GuestsPage() {
                         Gerencie a lista de presença do seu casamento.
                     </p>
                 </div>
-                <button
-                    onClick={handleExportCSV}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-[#2A3B2E] text-[#F7F5F0] text-sm font-medium rounded-lg hover:bg-[#1a261d] transition-colors shadow-lg shadow-[#2A3B2E]/10"
-                >
-                    <Download size={16} />
-                    Exportar CSV
-                </button>
+                <div className="flex gap-2">
+                    <button
+                        onClick={loadData}
+                        className="flex items-center gap-2 px-3 py-2.5 border border-[#DCD3C5] text-[#6B7A6C] text-sm rounded-lg hover:bg-[#E5E0D6] transition-colors"
+                        title="Atualizar dados"
+                    >
+                        <RefreshCw size={16} />
+                    </button>
+                    <button
+                        onClick={handleExportCSV}
+                        disabled={guests.length === 0}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-[#2A3B2E] text-[#F7F5F0] text-sm font-medium rounded-lg hover:bg-[#1a261d] transition-colors shadow-lg shadow-[#2A3B2E]/10 disabled:opacity-50"
+                    >
+                        <Download size={16} />
+                        Exportar CSV
+                    </button>
+                </div>
             </header>
 
             {/* Stats Cards */}
@@ -94,7 +111,7 @@ export default function GuestsPage() {
                             <Users size={18} className="text-[#2A3B2E]" />
                         </div>
                         <div>
-                            <p className="text-2xl font-medium text-[#2A3B2E]">{MOCK_GUESTS.length}</p>
+                            <p className="text-2xl font-medium text-[#2A3B2E]">{stats.total}</p>
                             <p className="text-[10px] text-[#6B7A6C] uppercase tracking-wider">Total</p>
                         </div>
                     </div>
@@ -111,7 +128,7 @@ export default function GuestsPage() {
                             <UserCheck size={18} className="text-emerald-600" />
                         </div>
                         <div>
-                            <p className="text-2xl font-medium text-[#2A3B2E]">{totalConfirmed}</p>
+                            <p className="text-2xl font-medium text-[#2A3B2E]">{stats.confirmed}</p>
                             <p className="text-[10px] text-[#6B7A6C] uppercase tracking-wider">Confirmados</p>
                         </div>
                     </div>
@@ -128,7 +145,7 @@ export default function GuestsPage() {
                             <Clock size={18} className="text-amber-600" />
                         </div>
                         <div>
-                            <p className="text-2xl font-medium text-[#2A3B2E]">{totalPending}</p>
+                            <p className="text-2xl font-medium text-[#2A3B2E]">{stats.pending}</p>
                             <p className="text-[10px] text-[#6B7A6C] uppercase tracking-wider">Pendentes</p>
                         </div>
                     </div>
@@ -145,8 +162,8 @@ export default function GuestsPage() {
                             <Baby size={18} className="text-[#C19B58]" />
                         </div>
                         <div>
-                            <p className="text-2xl font-medium text-[#2A3B2E]">{totalAdults + totalChildren}</p>
-                            <p className="text-[10px] text-[#6B7A6C] uppercase tracking-wider">{totalAdults} adultos, {totalChildren} crianças</p>
+                            <p className="text-2xl font-medium text-[#2A3B2E]">{stats.totalAdults}</p>
+                            <p className="text-[10px] text-[#6B7A6C] uppercase tracking-wider">Pessoas no Total</p>
                         </div>
                     </div>
                 </motion.div>
@@ -189,9 +206,9 @@ export default function GuestsPage() {
                         <thead className="bg-[#F7F5F0] border-b border-[#DCD3C5]">
                             <tr>
                                 <th className="text-left px-6 py-4 text-xs font-bold text-[#2A3B2E] uppercase tracking-wider">Nome</th>
+                                <th className="text-left px-6 py-4 text-xs font-bold text-[#2A3B2E] uppercase tracking-wider">Telefone</th>
                                 <th className="text-left px-6 py-4 text-xs font-bold text-[#2A3B2E] uppercase tracking-wider">Status</th>
-                                <th className="text-center px-6 py-4 text-xs font-bold text-[#2A3B2E] uppercase tracking-wider">Adultos</th>
-                                <th className="text-center px-6 py-4 text-xs font-bold text-[#2A3B2E] uppercase tracking-wider">Crianças</th>
+                                <th className="text-center px-6 py-4 text-xs font-bold text-[#2A3B2E] uppercase tracking-wider">Pessoas</th>
                                 <th className="text-left px-6 py-4 text-xs font-bold text-[#2A3B2E] uppercase tracking-wider">Mensagem</th>
                             </tr>
                         </thead>
@@ -202,20 +219,20 @@ export default function GuestsPage() {
                                         <span className="text-sm font-medium text-[#2A3B2E]">{guest.name}</span>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${guest.status === "confirmed"
+                                        <span className="text-sm text-[#6B7A6C]">{guest.phone}</span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${guest.isAttending
                                                 ? "bg-emerald-100 text-emerald-700"
                                                 : "bg-amber-100 text-amber-700"
                                             }`}>
-                                            <span className={`w-1.5 h-1.5 rounded-full ${guest.status === "confirmed" ? "bg-emerald-500" : "bg-amber-500"
+                                            <span className={`w-1.5 h-1.5 rounded-full ${guest.isAttending ? "bg-emerald-500" : "bg-amber-500"
                                                 }`} />
-                                            {guest.status === "confirmed" ? "Confirmado" : "Pendente"}
+                                            {guest.isAttending ? "Confirmado" : "Não comparecerá"}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-center">
-                                        <span className="text-sm text-[#3E4A3F]">{guest.adults}</span>
-                                    </td>
-                                    <td className="px-6 py-4 text-center">
-                                        <span className="text-sm text-[#3E4A3F]">{guest.children}</span>
+                                        <span className="text-sm text-[#3E4A3F]">{guest.guests}</span>
                                     </td>
                                     <td className="px-6 py-4">
                                         {guest.message ? (
@@ -236,7 +253,11 @@ export default function GuestsPage() {
                 {filteredGuests.length === 0 && (
                     <div className="p-12 text-center">
                         <Users size={40} className="mx-auto text-[#DCD3C5] mb-4" />
-                        <p className="text-[#6B7A6C]">Nenhum convidado encontrado.</p>
+                        <p className="text-[#6B7A6C]">
+                            {guests.length === 0
+                                ? "Nenhum convidado confirmou ainda."
+                                : "Nenhum convidado encontrado com esse filtro."}
+                        </p>
                     </div>
                 )}
             </motion.div>

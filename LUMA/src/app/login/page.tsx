@@ -14,7 +14,7 @@ export default function LoginPage() {
     const handleAuth = (e: React.FormEvent) => {
         e.preventDefault();
         // In a real app, validation and auth logic here
-        router.push('/briefing');
+        router.push('/dashboard');
     };
 
     return (

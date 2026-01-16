@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import LoadingScreen from '@/components/template1/LoadingScreen';
 import Navbar from '@/components/template1/Navbar';
@@ -14,7 +14,7 @@ import FAQ from '@/components/template1/FAQ';
 import RSVP from '@/components/template1/RSVP';
 import SectionTransition from '@/components/template1/SectionTransition';
 import { Instagram, Mail, Heart } from 'lucide-react';
-import { TemplateData } from '@/types/template';
+import { TemplateData, themeColors } from '@/types/template';
 import Link from 'next/link';
 
 interface Template1Props {
@@ -37,6 +37,21 @@ const fieldToElementMap: Record<string, string> = {
 export default function Template1({ data }: Template1Props) {
     const [isLoading, setIsLoading] = useState(true);
     const [highlightedElement, setHighlightedElement] = useState<string | null>(null);
+
+    // Get theme colors based on config
+    const currentTheme = useMemo(() => {
+        const themeName = data.config?.theme || 'olive';
+        return themeColors[themeName];
+    }, [data.config?.theme]);
+
+    // CSS custom properties for theming
+    const themeStyle = useMemo((): React.CSSProperties => ({
+        '--theme-primary': currentTheme.primary,
+        '--theme-secondary': currentTheme.secondary,
+        '--theme-bg': currentTheme.bg,
+        '--theme-text': currentTheme.text,
+        '--theme-muted': currentTheme.muted,
+    } as React.CSSProperties), [currentTheme]);
 
     const formatDate = (dateString: string) => {
         if (!dateString) return "";
@@ -90,7 +105,7 @@ export default function Template1({ data }: Template1Props) {
     const getHighlightStyle = (elementId: string): React.CSSProperties => {
         if (highlightedElement === elementId) {
             return {
-                boxShadow: '0 0 0 4px rgba(193, 155, 88, 0.75)',
+                boxShadow: `0 0 0 4px ${currentTheme.secondary}bf`,
                 borderRadius: '8px',
                 transition: 'box-shadow 0.3s ease-in-out',
             };
@@ -107,6 +122,7 @@ export default function Template1({ data }: Template1Props) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: isLoading ? 0 : 1 }}
                 transition={{ duration: 0.5 }}
+                style={themeStyle}
                 className="min-h-screen bg-cream text-stone-800 font-sans selection:bg-olive-200 selection:text-olive-900"
             >
                 <Navbar data={data} />

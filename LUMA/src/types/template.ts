@@ -14,6 +14,61 @@ export interface SectionVisibility {
 }
 
 /**
+ * Available site themes
+ */
+export type SiteTheme = 'olive' | 'terracotta' | 'blue' | 'black';
+
+/**
+ * Site configuration
+ */
+export interface SiteConfig {
+    slug: string;
+    theme: SiteTheme;
+    isPasswordProtected: boolean;
+    sitePassword?: string;
+}
+
+/**
+ * Gift item for the gift registry
+ */
+export interface GiftItem {
+    id: string;
+    name: string;
+    price: number;
+    imageUrl: string;
+    category: string;
+}
+
+/**
+ * RSVP Guest entry
+ */
+export interface RSVPGuest {
+    id: string;
+    name: string;
+    phone: string;
+    guests: number;
+    guestNames: string;
+    children: string;
+    childrenAges: string;
+    isAttending: boolean;
+    songRequest: string;
+    message: string;
+    createdAt: string;
+}
+
+/**
+ * Gift transaction record
+ */
+export interface GiftTransaction {
+    id: string;
+    senderName: string;
+    giftName: string;
+    amount: number;
+    message?: string;
+    createdAt: string;
+}
+
+/**
  * Main template data structure for wedding sites
  */
 export interface TemplateData {
@@ -21,6 +76,9 @@ export interface TemplateData {
     brideName: string;
     date: string;
     heroImage: string;
+
+    // Site configuration
+    config: SiteConfig;
 
     // Hero section visibility
     hero: SectionVisibility;
@@ -55,8 +113,12 @@ export interface TemplateData {
     // RSVP section
     rsvp: SectionVisibility;
 
-    // Gifts section
-    gifts: SectionVisibility;
+    // Gifts section with items
+    gifts: SectionVisibility & {
+        items: GiftItem[];
+        pixKey?: string;
+        pixHolder?: string;
+    };
 }
 
 /**
@@ -67,13 +129,60 @@ export function generateImageId(): string {
 }
 
 /**
+ * Generate a unique ID for gifts
+ */
+export function generateGiftId(): string {
+    return `gift_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
+/**
+ * Generate a unique ID for RSVPs
+ */
+export function generateRSVPId(): string {
+    return `rsvp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
+/**
+ * Generate a unique ID for transactions
+ */
+export function generateTransactionId(): string {
+    return `tx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
+/**
+ * Generate slug from names
+ */
+export function generateSlug(brideName: string, groomName: string): string {
+    const clean = (name: string) => name.toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]/g, '');
+    return `${clean(brideName)}-e-${clean(groomName)}`;
+}
+
+/**
+ * Default gift items
+ */
+const defaultGiftItems: GiftItem[] = [
+    { id: "gift_default_1", name: "Jantar Romântico", price: 200, imageUrl: "", category: "Experiências" },
+    { id: "gift_default_2", name: "Lua de Mel", price: 500, imageUrl: "", category: "Viagem" },
+    { id: "gift_default_3", name: "Eletrodomésticos", price: 300, imageUrl: "", category: "Casa" },
+    { id: "gift_default_4", name: "Kit Decoração", price: 150, imageUrl: "", category: "Casa" },
+];
+
+/**
  * Default template data with all sections visible
  */
 export const defaultTemplateData: TemplateData = {
-    groomName: "Pedro",
-    brideName: "Ana",
-    date: "2025-10-25",
+    groomName: "",
+    brideName: "",
+    date: "",
     heroImage: "https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80",
+
+    config: {
+        slug: "",
+        theme: "olive",
+        isPasswordProtected: false,
+    },
 
     hero: {
         isVisible: true,
@@ -83,23 +192,23 @@ export const defaultTemplateData: TemplateData = {
         isVisible: true,
         image: "https://images.unsplash.com/photo-1511285560982-1351cdeb9821?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
         description: "Nossa história começou de forma inesperada...",
-        brideBio: "Ana ama café, livros e dias chuvosos.",
-        groomBio: "Pedro ama futebol, churrasco e dias de sol."
+        brideBio: "",
+        groomBio: ""
     },
 
     ceremony: {
         isVisible: true,
-        date: "2025-10-25",
+        date: "",
         time: "16:00",
-        locationName: "Capela dos Milagres",
-        address: "Rua das Flores, 123",
+        locationName: "",
+        address: "",
         mapLink: "#"
     },
 
     reception: {
         isVisible: true,
-        locationName: "Salão de Festas Jardim",
-        address: "Av. Principal, 400",
+        locationName: "",
+        address: "",
         mapLink: "#"
     },
 
@@ -118,5 +227,60 @@ export const defaultTemplateData: TemplateData = {
 
     gifts: {
         isVisible: true,
+        items: defaultGiftItems,
+        pixKey: "",
+        pixHolder: ""
     }
+};
+
+/**
+ * Check if site data is complete (has required fields)
+ */
+export function isSiteComplete(data: TemplateData): boolean {
+    return !!(data.brideName && data.groomName && data.date);
+}
+
+/**
+ * Theme color palettes
+ */
+export const themeColors: Record<SiteTheme, {
+    primary: string;
+    secondary: string;
+    bg: string;
+    text: string;
+    muted: string;
+    label: string;
+}> = {
+    olive: {
+        primary: '#5c6b5d',
+        secondary: '#C19B58',
+        bg: '#F7F5F0',
+        text: '#2A3B2E',
+        muted: '#6B7A6C',
+        label: 'Olive'
+    },
+    terracotta: {
+        primary: '#9c5c4e',
+        secondary: '#d4a373',
+        bg: '#fef9f5',
+        text: '#3d2c24',
+        muted: '#7a6058',
+        label: 'Terracotta'
+    },
+    blue: {
+        primary: '#2c3e50',
+        secondary: '#3498db',
+        bg: '#f8fafc',
+        text: '#1e293b',
+        muted: '#64748b',
+        label: 'Azul'
+    },
+    black: {
+        primary: '#18181b',
+        secondary: '#a1a1aa',
+        bg: '#fafafa',
+        text: '#09090b',
+        muted: '#71717a',
+        label: 'Preto'
+    },
 };
