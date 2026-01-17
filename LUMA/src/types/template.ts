@@ -19,6 +19,11 @@ export interface SectionVisibility {
 export type SiteTheme = 'olive' | 'terracotta' | 'blue' | 'black';
 
 /**
+ * Available visual theme styles (multi-theme system)
+ */
+export type ThemeStyle = 'classic' | 'modern' | 'botanical' | 'minimal';
+
+/**
  * Site plan types
  */
 export type SitePlan = 'free' | 'premium';
@@ -29,6 +34,7 @@ export type SitePlan = 'free' | 'premium';
 export interface SiteConfig {
     slug: string;
     theme: SiteTheme;
+    themeStyle: ThemeStyle;  // Multi-theme visual style
     isPasswordProtected: boolean;
     sitePassword?: string;
     plan: SitePlan;
@@ -74,6 +80,73 @@ export interface GiftTransaction {
     amount: number;
     message?: string;
     createdAt: string;
+}
+
+/**
+ * Timeline event for wedding day schedule
+ */
+export interface TimelineEvent {
+    id: string;
+    time: string;
+    title: string;
+    description?: string;
+    icon: 'ceremony' | 'reception' | 'dinner' | 'party' | 'cake' | 'dance' | 'photos';
+}
+
+/**
+ * Menu section for buffet
+ */
+export interface MenuSection {
+    title: string;
+    items: string[];
+}
+
+/**
+ * Menu/Buffet configuration
+ */
+export interface MenuConfig {
+    buffetName: string;
+    mainDish: string;
+    sections: MenuSection[];
+    pricing: {
+        adult: number;
+        child: number;
+        childAgeRange: string;
+    };
+    image?: string;
+}
+
+/**
+ * Dress code configuration
+ */
+export interface DressCodeConfig {
+    description: string;
+    avoid: string[];
+    suggestions?: string[];
+    images?: string[];
+}
+
+/**
+ * Accommodation/Hotel recommendation
+ */
+export interface AccommodationItem {
+    id: string;
+    name: string;
+    price: string;
+    address: string;
+    link: string;
+    image?: string;
+    distance?: string;
+}
+
+/**
+ * Guest manual item
+ */
+export interface GuestManualItem {
+    id: string;
+    title: string;
+    description: string;
+    icon: 'camera' | 'clock' | 'shirt' | 'car' | 'gift' | 'check' | 'sparkle';
 }
 
 /**
@@ -131,6 +204,27 @@ export interface TemplateData {
     // Guestbook / Mural de Recados
     guestbook: SectionVisibility & {
         messages: GuestbookMessage[];
+    };
+
+    // Timeline / Wedding Day Schedule
+    timeline: SectionVisibility & {
+        events: TimelineEvent[];
+    };
+
+    // Menu / Buffet
+    menu: SectionVisibility & MenuConfig;
+
+    // Dress Code
+    dressCode: SectionVisibility & DressCodeConfig;
+
+    // Accommodations / Hotels
+    accommodations: SectionVisibility & {
+        items: AccommodationItem[];
+    };
+
+    // Guest Manual
+    guestManual: SectionVisibility & {
+        items: GuestManualItem[];
     };
 }
 
@@ -205,6 +299,7 @@ export const defaultTemplateData: TemplateData = {
     config: {
         slug: "",
         theme: "olive",
+        themeStyle: "classic",
         isPasswordProtected: false,
         plan: "free",
     },
@@ -260,6 +355,45 @@ export const defaultTemplateData: TemplateData = {
     guestbook: {
         isVisible: true,
         messages: []
+    },
+
+    timeline: {
+        isVisible: false,
+        events: [
+            { id: "event_1", time: "16:00", title: "Cerimônia", icon: "ceremony" },
+            { id: "event_2", time: "17:30", title: "Coquetel", icon: "reception" },
+            { id: "event_3", time: "19:00", title: "Jantar", icon: "dinner" },
+            { id: "event_4", time: "21:00", title: "Festa", icon: "party" }
+        ]
+    },
+
+    menu: {
+        isVisible: false,
+        buffetName: "",
+        mainDish: "",
+        sections: [],
+        pricing: { adult: 0, child: 0, childAgeRange: "5-10" }
+    },
+
+    dressCode: {
+        isVisible: false,
+        description: "Traje esporte fino. Vista-se confortável!",
+        avoid: ["Branco"],
+        suggestions: ["Cores neutras", "Vestido ou terno"]
+    },
+
+    accommodations: {
+        isVisible: false,
+        items: []
+    },
+
+    guestManual: {
+        isVisible: false,
+        items: [
+            { id: "manual_1", title: "Chegue no Horário", description: "A cerimônia começará pontualmente.", icon: "clock" },
+            { id: "manual_2", title: "Tire Fotos", description: "Registre cada momento!", icon: "camera" },
+            { id: "manual_3", title: "Aproveite", description: "Divirta-se muito!", icon: "sparkle" }
+        ]
     }
 };
 

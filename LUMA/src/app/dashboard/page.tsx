@@ -27,7 +27,7 @@ import { isSiteComplete, TemplateData } from "@/types/template";
 export default function DashboardOverview() {
     const [guestStats, setGuestStats] = useState({ total: 0, confirmed: 0, pending: 0, totalAdults: 0, totalChildren: 0 });
     const [financial, setFinancial] = useState({ totalBalance: 0, transactionCount: 0, averageGift: 0, recentTransactions: [] as { id: string; senderName: string; giftName: string; amount: number; createdAt: string }[] });
-    const [siteData, setSiteData] = useState<Partial<TemplateData>>({ brideName: "", groomName: "", date: "", config: { slug: "", theme: "olive", isPasswordProtected: false, plan: "free" } });
+    const [siteData, setSiteData] = useState<Partial<TemplateData>>({ brideName: "", groomName: "", date: "", config: { slug: "", theme: "olive", themeStyle: "classic", isPasswordProtected: false, plan: "free" } });
     const [recentGuests, setRecentGuests] = useState<{ id: string; name: string; isAttending: boolean; guests: number; message: string; createdAt: string }[]>([]);
     const [showSlugAlert, setShowSlugAlert] = useState(false);
 
