@@ -19,6 +19,11 @@ export interface SectionVisibility {
 export type SiteTheme = 'olive' | 'terracotta' | 'blue' | 'black';
 
 /**
+ * Site plan types
+ */
+export type SitePlan = 'free' | 'premium';
+
+/**
  * Site configuration
  */
 export interface SiteConfig {
@@ -26,6 +31,8 @@ export interface SiteConfig {
     theme: SiteTheme;
     isPasswordProtected: boolean;
     sitePassword?: string;
+    plan: SitePlan;
+    whatsappNumber?: string;
 }
 
 /**
@@ -54,6 +61,7 @@ export interface RSVPGuest {
     songRequest: string;
     message: string;
     createdAt: string;
+    group?: string; // e.g., "Família Noivo", "Trabalho", etc.
 }
 
 /**
@@ -119,7 +127,23 @@ export interface TemplateData {
         pixKey?: string;
         pixHolder?: string;
     };
+
+    // Guestbook / Mural de Recados
+    guestbook: SectionVisibility & {
+        messages: GuestbookMessage[];
+    };
 }
+
+/**
+ * Guestbook message entry
+ */
+export interface GuestbookMessage {
+    id: string;
+    name: string;
+    text: string;
+    createdAt: string;
+}
+
 
 /**
  * Generate a unique ID for gallery images
@@ -182,6 +206,7 @@ export const defaultTemplateData: TemplateData = {
         slug: "",
         theme: "olive",
         isPasswordProtected: false,
+        plan: "free",
     },
 
     hero: {
@@ -230,6 +255,11 @@ export const defaultTemplateData: TemplateData = {
         items: defaultGiftItems,
         pixKey: "",
         pixHolder: ""
+    },
+
+    guestbook: {
+        isVisible: true,
+        messages: []
     }
 };
 

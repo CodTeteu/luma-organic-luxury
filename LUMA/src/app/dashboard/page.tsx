@@ -14,16 +14,20 @@ import {
     ArrowRight,
     TrendingUp,
     RefreshCw,
-    AlertCircle
+    AlertCircle,
+    Sparkles,
+    Eye,
+    Crown
 } from "lucide-react";
 import { getGuestStats, getFinancialSummary, getSiteData, getGuestList } from "@/services/mockStorage";
 import OnboardingModal from "@/components/dashboard/OnboardingModal";
+import LockedCard from "@/components/dashboard/LockedCard";
 import { isSiteComplete, TemplateData } from "@/types/template";
 
 export default function DashboardOverview() {
     const [guestStats, setGuestStats] = useState({ total: 0, confirmed: 0, pending: 0, totalAdults: 0, totalChildren: 0 });
     const [financial, setFinancial] = useState({ totalBalance: 0, transactionCount: 0, averageGift: 0, recentTransactions: [] as { id: string; senderName: string; giftName: string; amount: number; createdAt: string }[] });
-    const [siteData, setSiteData] = useState<Partial<TemplateData>>({ brideName: "", groomName: "", date: "", config: { slug: "", theme: "olive", isPasswordProtected: false } });
+    const [siteData, setSiteData] = useState<Partial<TemplateData>>({ brideName: "", groomName: "", date: "", config: { slug: "", theme: "olive", isPasswordProtected: false, plan: "free" } });
     const [recentGuests, setRecentGuests] = useState<{ id: string; name: string; isAttending: boolean; guests: number; message: string; createdAt: string }[]>([]);
     const [showSlugAlert, setShowSlugAlert] = useState(false);
 
@@ -125,10 +129,23 @@ export default function DashboardOverview() {
                 {/* Header */}
                 <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-medium text-[#2A3B2E] font-[family-name:var(--font-heading)]">
-                            Olá, {siteData.brideName || "Noiva"} & {siteData.groomName || "Noivo"}
-                        </h1>
-                        <p className="text-[#6B7A6C] mt-1">
+                        <div className="flex items-center gap-3 mb-1">
+                            <h1 className="text-2xl md:text-3xl font-medium text-[#2A3B2E] font-[family-name:var(--font-heading)]">
+                                Olá, {siteData.brideName || "Noiva"} & {siteData.groomName || "Noivo"}
+                            </h1>
+                            {/* Plan Badge */}
+                            {siteData.config?.plan === 'premium' ? (
+                                <span className="px-3 py-1 bg-gradient-to-r from-[#C19B58] to-[#A07D3A] text-white text-xs font-bold rounded-full flex items-center gap-1.5">
+                                    <Crown size={12} />
+                                    Premium
+                                </span>
+                            ) : (
+                                <span className="px-3 py-1 bg-[#E5E0D6] text-[#6B7A6C] text-xs font-medium rounded-full">
+                                    Plano Grátis
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-[#6B7A6C]">
                             Bem-vindos ao painel do seu casamento.
                         </p>
                     </div>
@@ -192,6 +209,43 @@ export default function DashboardOverview() {
                         );
                     })}
                 </section>
+
+                {/* Locked Metric Card for Free Plan */}
+                {siteData.config?.plan !== 'premium' && (
+                    <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <LockedCard
+                            title="Visitantes Únicos"
+                            value="127"
+                            icon={<Eye size={20} />}
+                            description="Veja quem visitou seu site"
+                            ctaText="Desbloquear Métricas"
+                            onUpgrade={() => alert('Upgrade modal here')}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-gradient-to-br from-[#2A3B2E] to-[#1a261d] rounded-2xl p-6 text-white relative overflow-hidden"
+                        >
+                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] opacity-5"></div>
+                            <div className="relative z-10">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <Sparkles size={20} className="text-[#C19B58]" />
+                                    <span className="text-xs font-bold uppercase tracking-wider text-[#C19B58]">Plano Premium</span>
+                                </div>
+                                <h3 className="text-xl font-medium font-[family-name:var(--font-heading)] mb-2">
+                                    Receba 3x mais presentes
+                                </h3>
+                                <p className="text-white/70 text-sm mb-4">
+                                    Habilite o carrinho de compras com checkout via WhatsApp e aumente suas conversões.
+                                </p>
+                                <button className="px-4 py-2.5 bg-[#C19B58] hover:bg-[#A07D3A] text-white text-sm font-medium rounded-lg flex items-center gap-2 transition-colors">
+                                    <Crown size={14} />
+                                    Fazer Upgrade
+                                </button>
+                            </div>
+                        </motion.div>
+                    </section>
+                )}
 
                 {/* Progress & Activity Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

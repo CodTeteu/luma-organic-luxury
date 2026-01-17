@@ -55,7 +55,7 @@ function setStorageItem<T>(key: string, value: T): void {
 /**
  * Dispatch custom event for cross-component updates
  */
-function dispatchUpdate(type: string): void {
+export function dispatchUpdate(type: string = "all"): void {
     if (!isBrowser) return;
     window.dispatchEvent(new CustomEvent("luma-storage-update", { detail: { type } }));
 }
@@ -122,6 +122,17 @@ export function addRSVP(guestData: Omit<RSVPGuest, "id" | "createdAt">): RSVPGue
  */
 export function removeRSVP(id: string): void {
     const guests = getGuestList().filter(g => g.id !== id);
+    setStorageItem(STORAGE_KEYS.GUESTS, guests);
+    dispatchUpdate("guests");
+}
+
+/**
+ * Update an RSVP guest
+ */
+export function updateGuest(id: string, updates: Partial<RSVPGuest>): void {
+    const guests = getGuestList().map(g =>
+        g.id === id ? { ...g, ...updates } : g
+    );
     setStorageItem(STORAGE_KEYS.GUESTS, guests);
     dispatchUpdate("guests");
 }
@@ -235,12 +246,16 @@ const mockStorage = {
     getGuestList,
     addRSVP,
     removeRSVP,
+    updateGuest,
     getGuestStats,
 
     // Transactions
     getTransactions,
     addTransaction,
     getFinancialSummary,
+
+    // Utils
+    dispatchUpdate,
 };
 
 export default mockStorage;

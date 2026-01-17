@@ -10,6 +10,7 @@ import Gallery from '@/components/template1/Gallery';
 import Ceremony from '@/components/template1/Ceremony';
 import Buffet from '@/components/template1/Buffet';
 import Gifts from '@/components/template1/Gifts';
+import Guestbook from '@/components/template1/Guestbook';
 import FAQ from '@/components/template1/FAQ';
 import RSVP from '@/components/template1/RSVP';
 import SectionTransition from '@/components/template1/SectionTransition';
@@ -161,12 +162,19 @@ export default function Template1({ data }: Template1Props) {
 
                     {/* Gifts Section */}
                     {data.gifts?.isVisible !== false && (
-                        <Gifts />
+                        <Gifts data={data} />
                     )}
 
                     <div className="h-px bg-stone-200 max-w-7xl mx-auto" />
 
                     <FAQ />
+
+                    <div className="h-px bg-stone-200 max-w-7xl mx-auto" />
+
+                    {/* Guestbook Section */}
+                    {data.guestbook?.isVisible !== false && (
+                        <Guestbook coupleName={`${data.brideName} & ${data.groomName}`} />
+                    )}
 
                     <div className="h-px bg-stone-200 max-w-7xl mx-auto" />
 

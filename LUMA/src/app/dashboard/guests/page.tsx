@@ -13,14 +13,25 @@ import {
     Filter,
     RefreshCw
 } from "lucide-react";
-import { getGuestList, getGuestStats } from "@/services/mockStorage";
+import { getGuestList, getGuestStats, updateGuest, dispatchUpdate } from "@/services/mockStorage";
 import { RSVPGuest } from "@/types/template";
+
+const GUEST_GROUPS = [
+    "Sem Grupo",
+    "Família Noiva",
+    "Família Noivo",
+    "Amigos",
+    "Trabalho",
+    "Padrinhos",
+    "Outros"
+];
 
 export default function GuestsPage() {
     const [guests, setGuests] = useState<RSVPGuest[]>([]);
     const [stats, setStats] = useState({ total: 0, confirmed: 0, pending: 0, totalAdults: 0, totalChildren: 0 });
     const [searchTerm, setSearchTerm] = useState("");
     const [filterStatus, setFilterStatus] = useState<"all" | "confirmed" | "pending">("all");
+    const [filterGroup, setFilterGroup] = useState<string>("all");
 
     const loadData = () => {
         const guestList = getGuestList();
@@ -44,18 +55,20 @@ export default function GuestsPage() {
         const matchesFilter = filterStatus === "all" ||
             (filterStatus === "confirmed" && guest.isAttending) ||
             (filterStatus === "pending" && !guest.isAttending);
-        return matchesSearch && matchesFilter;
+        const matchesGroup = filterGroup === "all" || (guest.group || "Sem Grupo") === filterGroup;
+        return matchesSearch && matchesFilter && matchesGroup;
     });
 
     const handleExportCSV = () => {
-        const headers = ["Nome", "Telefone", "Status", "Adultos", "Crianças", "Mensagem", "Data"];
+        const headers = ["Nome", "Telefone", "Status", "Grupo", "Adultos", "Crianças", "Mensagem", "Data"];
         const rows = guests.map(g => [
             g.name,
             g.phone,
             g.isAttending ? "Confirmado" : "Pendente",
+            g.group || "Sem Grupo",
             g.guests.toString(),
             g.children === "sim" ? "Sim" : "Não",
-            g.message,
+            `"${(g.message || "").replace(/"/g, "'")}"`,
             new Date(g.createdAt).toLocaleDateString('pt-BR')
         ]);
 
@@ -66,6 +79,12 @@ export default function GuestsPage() {
         a.href = url;
         a.download = "convidados-casamento.csv";
         a.click();
+    };
+
+    const handleGroupChange = (guestId: string, group: string) => {
+        updateGuest(guestId, { group });
+        dispatchUpdate();
+        loadData();
     };
 
     return (
@@ -208,6 +227,7 @@ export default function GuestsPage() {
                                 <th className="text-left px-6 py-4 text-xs font-bold text-[#2A3B2E] uppercase tracking-wider">Nome</th>
                                 <th className="text-left px-6 py-4 text-xs font-bold text-[#2A3B2E] uppercase tracking-wider">Telefone</th>
                                 <th className="text-left px-6 py-4 text-xs font-bold text-[#2A3B2E] uppercase tracking-wider">Status</th>
+                                <th className="text-left px-6 py-4 text-xs font-bold text-[#2A3B2E] uppercase tracking-wider">Grupo</th>
                                 <th className="text-center px-6 py-4 text-xs font-bold text-[#2A3B2E] uppercase tracking-wider">Pessoas</th>
                                 <th className="text-left px-6 py-4 text-xs font-bold text-[#2A3B2E] uppercase tracking-wider">Mensagem</th>
                             </tr>
@@ -223,8 +243,8 @@ export default function GuestsPage() {
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${guest.isAttending
-                                                ? "bg-emerald-100 text-emerald-700"
-                                                : "bg-amber-100 text-amber-700"
+                                            ? "bg-emerald-100 text-emerald-700"
+                                            : "bg-amber-100 text-amber-700"
                                             }`}>
                                             <span className={`w-1.5 h-1.5 rounded-full ${guest.isAttending ? "bg-emerald-500" : "bg-amber-500"
                                                 }`} />
@@ -233,6 +253,17 @@ export default function GuestsPage() {
                                     </td>
                                     <td className="px-6 py-4 text-center">
                                         <span className="text-sm text-[#3E4A3F]">{guest.guests}</span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <select
+                                            value={guest.group || "Sem Grupo"}
+                                            onChange={(e) => handleGroupChange(guest.id, e.target.value)}
+                                            className="px-2 py-1 text-xs border border-[#DCD3C5] rounded-md focus:border-[#C19B58] focus:outline-none bg-white text-[#3E4A3F]"
+                                        >
+                                            {GUEST_GROUPS.map((group) => (
+                                                <option key={group} value={group}>{group}</option>
+                                            ))}
+                                        </select>
                                     </td>
                                     <td className="px-6 py-4">
                                         {guest.message ? (

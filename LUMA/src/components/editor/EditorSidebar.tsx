@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import {
     Lock, Palette, Type, Gift, Sparkles, ChevronDown, ChevronUp,
-    MapPin, Heart, Home, Clock, Image as ImageIcon, Plus, Trash2, Eye, EyeOff, DollarSign, Link as LinkIcon, Check
+    MapPin, Heart, Home, Clock, Image as ImageIcon, Plus, Trash2, Eye, EyeOff, DollarSign, Link as LinkIcon, Check, Crown, Phone
 } from "lucide-react";
 import UpgradeModal from "./UpgradeModal";
 import ImageCropModal from "./ImageCropModal";
@@ -613,6 +613,41 @@ export default function EditorSidebar({ data, onChange }: EditorSidebarProps) {
                                     <div className="h-2 w-2/3 bg-[#E5E0D6] rounded mb-1"></div>
                                     <div className="h-2 w-1/2 bg-[#E5E0D6] rounded"></div>
                                 </div>
+
+                                {/* Plan Toggle (Developer Demo) */}
+                                <div className="pt-4 mt-4 border-t border-[#DCD3C5]/50 space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs font-bold text-[#2A3B2E] uppercase tracking-wider flex items-center gap-1">
+                                            <Crown size={12} className="text-[#C19B58]" />
+                                            Simular Premium
+                                        </label>
+                                        <Switch
+                                            checked={data.config?.plan === 'premium'}
+                                            onChange={(checked: boolean) =>
+                                                onChange("config", { ...data.config, plan: checked ? 'premium' : 'free' } as TemplateData["config"])
+                                            }
+                                        />
+                                    </div>
+                                    <p className="text-[10px] text-[#6B7A6C]">Ative para testar os recursos Premium</p>
+                                </div>
+
+                                {/* WhatsApp Number (Premium Only) */}
+                                {data.config?.plan === 'premium' && (
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-[#2A3B2E] uppercase tracking-wider flex items-center gap-1">
+                                            <Phone size={12} />
+                                            WhatsApp do Casal
+                                        </label>
+                                        <input
+                                            type="tel"
+                                            value={data.config?.whatsappNumber || ""}
+                                            onChange={(e) => onChange("config", { ...data.config, whatsappNumber: e.target.value } as TemplateData["config"])}
+                                            placeholder="5511999999999"
+                                            className="w-full px-3 py-2 text-sm border border-[#DCD3C5] rounded-lg focus:border-[#C19B58] focus:outline-none bg-white text-[#3E4A3F]"
+                                        />
+                                        <p className="text-[10px] text-[#6B7A6C]">Número com DDD para receber os comprovantes PIX</p>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
