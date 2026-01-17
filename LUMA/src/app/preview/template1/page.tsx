@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import Template1 from '@/components/template1/Template1';
+import TemplateRenderer from '@/components/TemplateRenderer';
 import { defaultTemplateData, TemplateData } from '@/types/template';
 
 export default function TemplatePreview() {
@@ -19,5 +19,12 @@ export default function TemplatePreview() {
         return () => window.removeEventListener('message', handleMessage);
     }, []);
 
-    return <Template1 data={data} />;
+    return (
+        <>
+            <div className="fixed bottom-4 right-4 z-50 bg-black/80 text-white p-2 rounded text-xs font-mono pointer-events-none">
+                Debug Theme: {data.config?.themeStyle || 'undefined'}
+            </div>
+            <TemplateRenderer data={data} />
+        </>
+    );
 }

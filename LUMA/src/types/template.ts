@@ -21,7 +21,18 @@ export type SiteTheme = 'olive' | 'terracotta' | 'blue' | 'black';
 /**
  * Available visual theme styles (multi-theme system)
  */
-export type ThemeStyle = 'classic' | 'modern' | 'botanical' | 'minimal';
+export type ThemeStyle =
+    | 'organic-luxury'
+    | 'classic-romance'
+    | 'modern-minimal'
+    | 'boho-chic'
+    | 'dark-elegance'
+    | 'beach-destination'
+    | 'editorial-vogue'
+    | 'rustic-barn'
+    | 'floral-garden'
+    | 'industrial-loft'
+    | 'classic' | 'modern' | 'botanical' | 'minimal'; // Keep old ones for migration compatibility if needed, or remove if safe. Let's keep for now but map them later.
 
 /**
  * Site plan types
