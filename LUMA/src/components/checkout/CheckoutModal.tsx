@@ -4,13 +4,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, ShoppingBag, Trash2, Plus, Minus, MessageCircle, Heart } from "lucide-react";
 import confetti from "canvas-confetti";
 import { useCart } from "@/contexts/CartContext";
+import { addTransaction, dispatchUpdate } from "@/services/mockStorage";
 
 interface CheckoutModalProps {
     whatsappNumber?: string;
     coupleName?: string;
+    guestName?: string;
 }
 
-export default function CheckoutModal({ whatsappNumber, coupleName = "os noivos" }: CheckoutModalProps) {
+export default function CheckoutModal({ whatsappNumber, coupleName = "os noivos", guestName = "Convidado" }: CheckoutModalProps) {
     const { items, removeFromCart, updateQuantity, clearCart, total, isOpen, setIsOpen } = useCart();
 
     const generateWhatsAppLink = () => {
@@ -26,6 +28,17 @@ export default function CheckoutModal({ whatsappNumber, coupleName = "os noivos"
     };
 
     const handleCheckout = () => {
+        // Register each gift item as a pending transaction in the dashboard
+        items.forEach((item) => {
+            addTransaction({
+                senderName: guestName,
+                giftName: item.name,
+                amount: item.price * item.quantity,
+                message: `Aguardando confirmação de pagamento`
+            });
+        });
+        dispatchUpdate("transactions");
+
         // Fire fireworks celebration!
         const duration = 2 * 1000;
         const end = Date.now() + duration;

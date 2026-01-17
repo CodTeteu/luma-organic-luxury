@@ -131,14 +131,13 @@ export default function FinancialPage() {
                         </div>
                     </div>
 
-                    <p className="text-5xl font-medium font-[family-name:var(--font-heading)] mb-8">
+                    <p className="text-5xl font-medium font-[family-name:var(--font-heading)] mb-4">
                         R$ {summary.totalBalance.toLocaleString('pt-BR')}
                     </p>
 
-                    <button className="flex items-center gap-2 px-6 py-3 bg-[#C19B58] text-white rounded-lg font-medium hover:bg-[#b08d4b] transition-colors">
-                        <ArrowUpRight size={18} />
-                        Solicitar Saque
-                    </button>
+                    <p className="text-white/60 text-sm">
+                        💚 Os valores caem direto na sua conta via PIX
+                    </p>
                 </div>
             </motion.div>
 
@@ -187,12 +186,12 @@ export default function FinancialPage() {
                     className="bg-white/80 p-6 rounded-xl border border-[#DCD3C5]"
                 >
                     <div className="flex items-center gap-3">
-                        <div className="p-3 rounded-xl bg-[#2A3B2E]/5">
-                            <Clock size={20} className="text-[#2A3B2E]" />
+                        <div className="p-3 rounded-xl bg-emerald-50">
+                            <Check size={20} className="text-emerald-600" />
                         </div>
                         <div>
-                            <p className="text-2xl font-medium text-[#2A3B2E]">2 dias</p>
-                            <p className="text-xs text-[#6B7A6C]">Prazo para saque</p>
+                            <p className="text-2xl font-medium text-[#2A3B2E]">Instantâneo</p>
+                            <p className="text-xs text-[#6B7A6C]">PIX cai direto na conta</p>
                         </div>
                     </div>
                 </motion.div>
