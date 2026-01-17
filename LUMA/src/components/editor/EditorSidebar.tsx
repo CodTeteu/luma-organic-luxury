@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import UpgradeModal from "./UpgradeModal";
 import ImageCropModal from "./ImageCropModal";
+import ThemeSelector from "./ThemeSelector";
 import { Switch } from "@/components/ui/Switch";
 import { showToast } from "@/components/ui/Toast";
 import { TemplateData, GalleryImage, GiftItem, SiteTheme, themeColors, generateImageId, generateGiftId, generateSlug } from "@/types/template";
@@ -344,6 +345,33 @@ export default function EditorSidebar({ data, onChange }: EditorSidebarProps) {
                                         <span className="text-[10px] bg-[#C19B58] text-white px-2 py-1 rounded shadow-sm font-bold">Mudar Tipografia</span>
                                     </div>
                                 </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* DESIGN & TEMA */}
+                    <div className="border-b border-[#DCD3C5]/50">
+                        <div
+                            onClick={() => toggleSection("design")}
+                            className={`w-full flex items-center justify-between p-4 hover:bg-[#E5E0D6]/50 transition-colors cursor-pointer ${openSection === 'design' ? 'bg-[#E5E0D6]/50' : ''}`}
+                        >
+                            <div className="flex items-center gap-3">
+                                <Palette size={18} className="text-[#C19B58]" />
+                                <span className="font-medium text-[#2A3B2E]">Design & Tema</span>
+                                <span className="text-[9px] uppercase font-bold tracking-wider text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">Novo</span>
+                            </div>
+                            {openSection === 'design' ? <ChevronUp size={16} className="text-[#6B7A6C]" /> : <ChevronDown size={16} className="text-[#6B7A6C]" />}
+                        </div>
+
+                        {openSection === 'design' && (
+                            <div className="p-4 bg-white/50 animate-in slide-in-from-top-2 duration-200">
+                                <ThemeSelector
+                                    data={data}
+                                    onChange={(updatedData) => {
+                                        // Update the config with the new themeStyle
+                                        onChange("config", updatedData.config);
+                                    }}
+                                />
                             </div>
                         )}
                     </div>
