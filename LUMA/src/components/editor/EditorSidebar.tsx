@@ -199,9 +199,9 @@ export default function EditorSidebar({ data, onChange }: EditorSidebarProps) {
         isVisible: boolean;
         onToggleVisibility: () => void;
     }) => (
-        <button
+        <div
             onClick={() => toggleSection(id)}
-            className={`w-full flex items-center justify-between p-4 hover:bg-[#E5E0D6]/50 transition-colors ${openSection === id ? 'bg-[#E5E0D6]/50' : ''}`}
+            className={`w-full flex items-center justify-between p-4 hover:bg-[#E5E0D6]/50 transition-colors cursor-pointer ${openSection === id ? 'bg-[#E5E0D6]/50' : ''}`}
         >
             <div className="flex items-center gap-3">
                 <Icon size={18} className="text-[#6B7A6C]" />
@@ -230,7 +230,7 @@ export default function EditorSidebar({ data, onChange }: EditorSidebarProps) {
                     <ChevronDown size={16} className="text-[#6B7A6C]" />
                 )}
             </div>
-        </button>
+        </div>
     );
 
     return (
