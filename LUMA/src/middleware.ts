@@ -19,6 +19,9 @@ export function middleware(request: NextRequest) {
         '/favicon.ico',
         '/images',
         '/fonts',
+        '/termos-de-uso',
+        '/politica-de-privacidade',
+        '/politica-de-cookies',
     ];
 
     // Check if path starts with any protected path
