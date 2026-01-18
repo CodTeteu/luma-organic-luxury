@@ -2,8 +2,7 @@ import { motion } from 'framer-motion';
 import { useInView } from 'framer-motion';
 import { useRef } from 'react';
 import { TemplateData } from '@/types/template';
-import EditableText from '@/components/editor/EditableText';
-import EditableImage from '@/components/editor/EditableImage';
+import Image from 'next/image';
 
 // In a real app we would pass data prop here, but for now we might need to access it from context or props
 // Assuming we update Template1.tsx to pass data to Couple
@@ -60,11 +59,11 @@ const Couple = ({ data, config }: CoupleProps) => {
                     >
                         <div className={`absolute inset-0 rounded-tl-[5rem] rounded-br-[5rem] translate-x-4 translate-y-4 opacity-20 ${config?.colors?.primary?.replace('text-', 'bg-') || 'bg-olive-100'}`} />
                         <div className={`relative h-[500px] w-full ${roundedClass || 'rounded-tl-[5rem] rounded-br-[5rem]'} overflow-hidden shadow-2xl`}>
-                            <EditableImage
+                            <Image
                                 src={coupleImage}
                                 alt="Couple"
-                                field="couple.image"
-                                className="w-full h-full object-cover"
+                                fill
+                                className="object-cover"
                             />
                         </div>
                     </motion.div>
@@ -77,32 +76,23 @@ const Couple = ({ data, config }: CoupleProps) => {
                         className="text-center md:text-left space-y-8"
                     >
                         <div>
-                            <EditableText
-                                value={description}
-                                field="couple.description"
-                                tag="p"
-                                className={`${bodyFont} text-lg md:text-xl leading-relaxed italic opacity-80`}
-                            />
+                            <p className={`${bodyFont} text-lg md:text-xl leading-relaxed italic opacity-80`}>
+                                {description}
+                            </p>
                         </div>
 
                         <div className={`grid grid-cols-2 gap-8 pt-8 border-t ${config?.style?.borders?.split(' ')[0] || 'border-stone-100'}`}>
                             <div>
                                 <h3 className={`${headingFont} text-3xl ${primaryClass} mb-2`}>{brideName}</h3>
-                                <EditableText
-                                    value={brideBio}
-                                    field="couple.brideBio"
-                                    tag="p"
-                                    className={`text-sm leading-relaxed opacity-70`}
-                                />
+                                <p className="text-sm leading-relaxed opacity-70">
+                                    {brideBio}
+                                </p>
                             </div>
                             <div>
                                 <h3 className={`${headingFont} text-3xl ${primaryClass} mb-2`}>{groomName}</h3>
-                                <EditableText
-                                    value={groomBio}
-                                    field="couple.groomBio"
-                                    tag="p"
-                                    className={`text-sm leading-relaxed opacity-70`}
-                                />
+                                <p className="text-sm leading-relaxed opacity-70">
+                                    {groomBio}
+                                </p>
                             </div>
                         </div>
                     </motion.div>

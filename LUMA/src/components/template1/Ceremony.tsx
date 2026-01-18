@@ -3,7 +3,6 @@ import { useInView } from 'framer-motion';
 import { useRef } from 'react';
 import { MapPin, Clock } from 'lucide-react';
 import { TemplateData } from '@/types/template';
-import EditableText from '@/components/editor/EditableText';
 import Link from 'next/link';
 
 interface CeremonyProps {
@@ -64,13 +63,13 @@ const Ceremony = ({ data, config }: CeremonyProps) => {
                         <div className="space-y-1 mb-6 text-center md:text-right">
                             <p className="text-lg opacity-80">{ceremonyDate}</p>
                             <div className="flex items-center justify-center md:justify-end gap-2 opacity-60">
-                                <EditableText value={ceremonyTime} field="ceremony.time" tag="span" /> <span className="text-xs uppercase tracking-widest">Horas</span>
+                                <span>{ceremonyTime}</span> <span className="text-xs uppercase tracking-widest">Horas</span>
                             </div>
                         </div>
 
                         <div className="space-y-2 text-center md:text-right">
                             <h4 className="font-bold uppercase tracking-widest text-xs opacity-50">Local</h4>
-                            <EditableText value={ceremonyLocation} field="ceremony.locationName" tag="p" className={`${bodyFont} italic opacity-90`} />
+                            <p className={`${bodyFont} italic opacity-90`}>{ceremonyLocation}</p>
                             <p className="text-sm text-center md:text-right opacity-60">Rua das Flores, 123 - Cidade Jardim</p>
                         </div>
 
@@ -99,7 +98,7 @@ const Ceremony = ({ data, config }: CeremonyProps) => {
 
                         <div className="space-y-2 text-center md:text-left">
                             <h4 className="font-bold uppercase tracking-widest text-xs opacity-50">Local</h4>
-                            <EditableText value={receptionLocation} field="reception.locationName" tag="p" className={`${bodyFont} italic opacity-90`} />
+                            <p className={`${bodyFont} italic opacity-90`}>{receptionLocation}</p>
                             <p className="text-sm text-center md:text-left opacity-60">Avenida Principal, 500 - Centro</p>
                         </div>
 

@@ -44,14 +44,14 @@ export function HeroSection() {
                     </p>
 
                     <div className="flex flex-col sm:flex-row gap-4">
-                        <Link href={siteConfig.links.login}>
+                        <Link href="/templates">
                             <motion.div
                                 className="inline-flex items-center justify-center gap-3 bg-[#C19B58] text-white px-8 py-4 text-lg font-medium tracking-wide rounded-lg shadow-xl shadow-[#C19B58]/30 hover:bg-[#b08d4b] transition-all"
                                 whileHover={{ y: -2 }}
                                 whileTap={{ scale: 0.98 }}
                             >
                                 <Sparkles size={20} />
-                                Iniciar meu Projeto
+                                Ver Templates
                             </motion.div>
                         </Link>
                         <Link

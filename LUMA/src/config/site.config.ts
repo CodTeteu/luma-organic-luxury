@@ -26,11 +26,13 @@ export const siteConfig = {
     instagram: "#",
     login: "/login",
     briefing: "/briefing",
+    templates: "/templates",
   },
 
   // Navigation
   navigation: {
     main: [
+      { label: "Templates", href: "/templates" },
       { label: "Como Funciona", href: "#como-funciona" },
       { label: "Sobre", href: "#sobre" },
       { label: "Portfólio", href: "#portfolio" },

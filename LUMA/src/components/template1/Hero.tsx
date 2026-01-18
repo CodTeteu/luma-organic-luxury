@@ -2,8 +2,7 @@ import { motion } from 'framer-motion';
 import { ChevronDown, MousePointer2 } from 'lucide-react';
 import Countdown from './Countdown';
 import { TemplateData } from '@/types/template';
-import EditableText from '@/components/editor/EditableText';
-import EditableImage from '@/components/editor/EditableImage';
+import Image from 'next/image';
 
 interface HeroProps {
     data: TemplateData;
@@ -39,12 +38,13 @@ const Hero = ({ data }: HeroProps) => {
                 transition={{ duration: 1.5, ease: 'easeOut' }}
                 className="absolute inset-0 z-0 select-none"
             >
-                <div className="absolute inset-0 w-full h-full"> {/* Container required for EditableImage positioning */}
-                    <EditableImage
+                <div className="absolute inset-0 w-full h-full">
+                    <Image
                         src={data.heroImage}
                         alt="Wedding Couple"
-                        field="heroImage"
-                        className="w-full h-full"
+                        fill
+                        className="object-cover"
+                        priority
                     />
                 </div>
                 {/* Gradient overlays */}
@@ -81,9 +81,9 @@ const Hero = ({ data }: HeroProps) => {
                     className="relative mb-10"
                 >
                     <h1 className="font-script text-[5rem] md:text-[8rem] lg:text-[11rem] leading-none text-cream drop-shadow-2xl mix-blend-overlay opacity-90 flex flex-col md:block">
-                        <EditableText value={data.brideName} field="brideName" tag="span" />
+                        <span>{data.brideName}</span>
                         <span className="text-[3rem] md:text-[5rem] font-serif italic align-middle mx-4 text-olive-200">&</span>
-                        <EditableText value={data.groomName} field="groomName" tag="span" />
+                        <span>{data.groomName}</span>
                     </h1>
                 </motion.div>
 
