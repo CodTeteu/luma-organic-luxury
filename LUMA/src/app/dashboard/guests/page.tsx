@@ -14,7 +14,7 @@ import {
     RefreshCw
 } from "lucide-react";
 import { getGuestList, getGuestStats, updateGuest, dispatchUpdate } from "@/services/mockStorage";
-import { RSVPGuest } from "@/types/template";
+import { RSVPGuest } from "@/types";
 
 const GUEST_GROUPS = [
     "Sem Grupo",

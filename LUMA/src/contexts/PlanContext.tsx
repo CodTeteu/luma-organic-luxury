@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useCallback } from "react";
-import { SitePlan } from "@/types/template";
+import { SitePlan } from "@/types";
 
 interface PlanContextType {
     currentPlan: SitePlan;

@@ -14,8 +14,8 @@ import {
     RefreshCw
 } from "lucide-react";
 import { showToast } from "@/components/ui/Toast";
-import { getFinancialSummary, getTransactions, getSiteData, saveSiteData } from "@/services/mockStorage";
-import { GiftTransaction } from "@/types/template";
+import { getFinancialSummary, getTransactions } from "@/services/mockStorage";
+import { GiftTransaction } from "@/types";
 
 export default function FinancialPage() {
     const [transactions, setTransactions] = useState<GiftTransaction[]>([]);
@@ -28,12 +28,23 @@ export default function FinancialPage() {
     const loadData = () => {
         const txList = getTransactions();
         const fin = getFinancialSummary();
-        const site = getSiteData();
 
         setTransactions(txList);
         setSummary(fin);
-        setPixKey(site.gifts?.pixKey || "");
-        setPixHolder(site.gifts?.pixHolder || "");
+
+        // Load PIX config from localStorage
+        if (typeof window !== 'undefined') {
+            const storedPix = localStorage.getItem('luma_pix_config');
+            if (storedPix) {
+                try {
+                    const pixConfig = JSON.parse(storedPix);
+                    setPixKey(pixConfig.pixKey || "");
+                    setPixHolder(pixConfig.pixHolder || "");
+                } catch {
+                    // Ignore parse errors
+                }
+            }
+        }
     };
 
     useEffect(() => {
@@ -54,15 +65,10 @@ export default function FinancialPage() {
     const handleSavePixConfig = async () => {
         setIsSaving(true);
 
-        const siteData = getSiteData();
-        saveSiteData({
-            ...siteData,
-            gifts: {
-                ...siteData.gifts,
-                pixKey,
-                pixHolder,
-            }
-        });
+        // Save PIX config to localStorage
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('luma_pix_config', JSON.stringify({ pixKey, pixHolder }));
+        }
 
         await new Promise(resolve => setTimeout(resolve, 500));
         setIsSaving(false);

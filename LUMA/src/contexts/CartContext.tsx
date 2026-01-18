@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
-import { GiftItem } from "@/types/template";
+import { GiftItem } from "@/types";
 
 interface CartItem extends GiftItem {
     quantity: number;

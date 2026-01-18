@@ -2,21 +2,18 @@
  * Mock Storage Service
  * 
  * Centralized localStorage-based service that simulates a backend.
- * Manages site data, RSVPs, and gift transactions.
+ * Manages RSVPs and gift transactions.
  */
 
 import {
-    TemplateData,
-    defaultTemplateData,
     RSVPGuest,
     GiftTransaction,
     generateRSVPId,
     generateTransactionId
-} from "@/types/template";
+} from "@/types";
 
 // Storage keys
 const STORAGE_KEYS = {
-    SITE_DATA: "luma_site_data",
     GUESTS: "luma_guests",
     TRANSACTIONS: "luma_transactions",
 } as const;
@@ -58,33 +55,6 @@ function setStorageItem<T>(key: string, value: T): void {
 export function dispatchUpdate(type: string = "all"): void {
     if (!isBrowser) return;
     window.dispatchEvent(new CustomEvent("luma-storage-update", { detail: { type } }));
-}
-
-// ============================================
-// SITE DATA (Template)
-// ============================================
-
-/**
- * Get site/template data
- */
-export function getSiteData(): TemplateData {
-    return getStorageItem<TemplateData>(STORAGE_KEYS.SITE_DATA, defaultTemplateData);
-}
-
-/**
- * Save site/template data
- */
-export function saveSiteData(data: TemplateData): void {
-    setStorageItem(STORAGE_KEYS.SITE_DATA, data);
-    dispatchUpdate("site");
-}
-
-/**
- * Reset site data to defaults
- */
-export function resetSiteData(): void {
-    setStorageItem(STORAGE_KEYS.SITE_DATA, defaultTemplateData);
-    dispatchUpdate("site");
 }
 
 // ============================================
@@ -218,7 +188,7 @@ export function getFinancialSummary(): {
  * Usage: useStorageListener("guests", () => refetch())
  */
 export function useStorageListener(
-    type: "site" | "guests" | "transactions" | "all",
+    type: "guests" | "transactions" | "all",
     callback: () => void
 ): void {
     if (!isBrowser) return;
@@ -237,11 +207,6 @@ export function useStorageListener(
 
 // Default export for convenience
 const mockStorage = {
-    // Site
-    getSiteData,
-    saveSiteData,
-    resetSiteData,
-
     // Guests
     getGuestList,
     addRSVP,
